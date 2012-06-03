@@ -646,8 +646,8 @@ goog.array.removeIf = function(arr, f, opt_obj) {
  * goog.array.concat([1, 2], null) -> [1, 2, null]
  *
  * IE のバージョン 6 〜 8 には、 iframe のなかで配列が作成されてから少し経って
- * iframe が破壊されるというバグが存在する（配列の作成直後ではない）。このバグは
- * {@link goog.net.IframeIo} によってデータを読み込んだ場合でも生じる。
+ * iframe が破壊されるというバグが存在する（配列の作成直後ではない）。
+ * {@link goog.net.IframeIo} によってデータを読み込んだ場合でも生じうる。
  * このバグは concat メソッドのみのもので、concat メソッドは致命的なエラー
  * (#-2147418113) をあげ始める。
  *
@@ -703,7 +703,7 @@ goog.array.clone = goog.array.toArray;
  * 配列または配列のようなオブジェクトに与えられたオブジェクトを破壊的に追加す
  * る。このメソッドは破壊的なので新しい配列は作成されない。
  *
- * Example:
+ * 例：
  * var a = [];
  * goog.array.extend(a, [0, 1]);
  * a; // [0, 1]
@@ -746,19 +746,16 @@ goog.array.extend = function(arr1, var_args) {
 
 
 /**
- * Adds or removes elements from an array. This is a generic version of Array
- * splice. This means that it might work on other objects similar to arrays,
- * such as the arguments object.
+ * 要素を配列に追加または配列から削除する。これは標準的な Array splice なので
+ * Arguments のような配列のようなオブジェクトでも同様に動作すると思われる。
  *
- * @param {goog.array.ArrayLike} arr The array to modify.
- * @param {number|undefined} index The index at which to start changing the
- *     array. If not defined, treated as 0.
- * @param {number} howMany How many elements to remove (0 means no removal. A
- *     value below 0 is treated as zero and so is any other non number. Numbers
- *     are floored).
- * @param {...*} var_args Optional, additional elements to insert into the
- *     array.
- * @return {!Array} the removed elements.
+ * @param {goog.array.ArrayLike} arr 変更される配列。
+ * @param {number|undefined} index 配列を変更する範囲の最初のインデックス。もし
+ *     定義されていない場合は 0 とみなされる。
+ * @param {number} howMany 削除する要素の数。0 であれば削除しない。負の値や数値
+ *     でない場合は 0 として処理される。小数は切り捨てられる。
+ * @param {...*} var_args 追加する要素。省略可能。
+ * @return {!Array} 削除された要素の配列。
  */
 goog.array.splice = function(arr, index, howMany, var_args) {
   goog.asserts.assert(arr.length != null);
@@ -769,23 +766,21 @@ goog.array.splice = function(arr, index, howMany, var_args) {
 
 
 /**
- * Returns a new array from a segment of an array. This is a generic version of
- * Array slice. This means that it might work on other objects similar to
- * arrays, such as the arguments object.
+ * 配列の一部分からなる新しい配列を返す。これは標準的な Array slice と同様の振る
+ * 舞いをするので Arguments のような配列のようなオブジェクトでも同様に動作すると
+ * 思われる。
  *
- * @param {goog.array.ArrayLike} arr The array from which to copy a segment.
- * @param {number} start The index of the first element to copy.
- * @param {number=} opt_end The index after the last element to copy.
- * @return {!Array} A new array containing the specified segment of the original
- *     array.
+ * @param {goog.array.ArrayLike} arr 一部分を複製したい配列。
+ * @param {number} start 複製する範囲の最初のインデックス。
+ * @param {number=} opt_end 複製する範囲の最後のインデックス。
+ * @return {!Array} 与えられた配列の一部分からなる新しい配列。
  */
 goog.array.slice = function(arr, start, opt_end) {
   goog.asserts.assert(arr.length != null);
 
-  // passing 1 arg to slice is not the same as passing 2 where the second is
-  // null or undefined (in that case the second argument is treated as 0).
-  // we could use slice on the arguments object and then use apply instead of
-  // testing the length
+  // 引数が 1 つの場合と 2 つの場合では挙動が異なる。後者は 第二引数が null か
+  // undefined とみなされる（つまり 0 とみなされる）。 apply の代わりに引数の数
+  // を確かめることでArguments オブジェクトにも slice を使うことができる。
   if (arguments.length <= 2) {
     return goog.array.ARRAY_PROTOTYPE_.slice.call(arr, start);
   } else {
@@ -795,20 +790,17 @@ goog.array.slice = function(arr, start, opt_end) {
 
 
 /**
- * Removes all duplicates from an array (retaining only the first
- * occurrence of each array element).  This function modifies the
- * array in place and doesn't change the order of the non-duplicate items.
+ * 重複したすべての要素を削除する（最初の要素は残される）。この関数は破壊的に配
+ * 列を変更する。重複がない場合にもオーダーは変わらない。
  *
- * For objects, duplicates are identified as having the same unique ID as
- * defined by {@link goog.getUid}.
+ * オブジェクトの一致判定には {@link goog.getUid} による値が用いられる。
  *
- * Runtime: N,
- * Worstcase space: 2N (no dupes)
+ * 実行時間のオーダー： N,
+ * 実行に要する容量： 2N （ほんとだよ！）
  *
- * @param {goog.array.ArrayLike} arr The array from which to remove duplicates.
- * @param {Array=} opt_rv An optional array in which to return the results,
- *     instead of performing the removal inplace.  If specified, the original
- *     array will remain unchanged.
+ * @param {goog.array.ArrayLike} arr 重複を削除したい配列。
+ * @param {Array=} opt_rv 結果を格納するための配列。これが指定されている場合、
+ *     arr は変更されず、 opt_rv に結果が上書きされる。
  */
 goog.array.removeDuplicates = function(arr, opt_rv) {
   var returnArray = opt_rv || arr;
@@ -817,8 +809,8 @@ goog.array.removeDuplicates = function(arr, opt_rv) {
   while (cursorRead < arr.length) {
     var current = arr[cursorRead++];
 
-    // Prefix each type with a single character representing the type to
-    // prevent conflicting keys (e.g. true and 'true').
+    // key の衝突（true と 'true'）を防ぐためにオブジェクトの種類の頭文字をオブ
+    // ジェクトの種類をあらわす値として用いる。
     var key = goog.isObject(current) ?
         'o' + goog.getUid(current) :
         (typeof current).charAt(0) + current;
@@ -833,28 +825,25 @@ goog.array.removeDuplicates = function(arr, opt_rv) {
 
 
 /**
- * Searches the specified array for the specified target using the binary
- * search algorithm.  If no opt_compareFn is specified, elements are compared
- * using <code>goog.array.defaultCompare</code>, which compares the elements
- * using the built in < and > operators.  This will produce the expected
- * behavior for homogeneous arrays of String(s) and Number(s). The array
- * specified <b>must</b> be sorted in ascending order (as defined by the
- * comparison function).  If the array is not sorted, results are undefined.
- * If the array contains multiple instances of the specified target value, any
- * of these instances may be found.
+ * 与えられた配列の中から検索対象のインデックスを 2 分探索によって探す。
+ * opt_compareFn が与えられていない場合、要素は
+ * 組み込みの < と > 演算子によって評価する {@link goog.array.defaultCompare}
+ * によって比較される。これは、文字列または数値のみを正しく比較できる。
+ * 配列は昇順（比較関数による）で配列されていなければならない。もし配列がソート
+ * されていない場合は結果は undefined になる。もし配列のなかに複数のターゲットが
+ * ある場合、そのいずれかが見つかる。
  *
- * Runtime: O(log n)
+ * 実行時間のオーダー： O(log n)
  *
- * @param {goog.array.ArrayLike} arr The array to be searched.
- * @param {*} target The sought value.
- * @param {Function=} opt_compareFn Optional comparison function by which the
- *     array is ordered. Should take 2 arguments to compare, and return a
- *     negative number, zero, or a positive number depending on whether the
- *     first argument is less than, equal to, or greater than the second.
- * @return {number} Lowest index of the target value if found, otherwise
- *     (-(insertion point) - 1). The insertion point is where the value should
- *     be inserted into arr to preserve the sorted property.  Return value >= 0
- *     iff target is found.
+ * @param {goog.array.ArrayLike} arr 検索される配列。
+ * @param {*} target 検索対象の値。
+ * @param {Function=} opt_compareFn 配列の順を定めている比較関数。省略可能。
+ *     2 つの引数が与えられ、戻り値が負の場合・0 の場合・正の場合について、それ
+ *     ぞれ第一引数が第二引数より小さい・等しい・大きい場合と対応する。
+ * @return {number} 検索対象が見つかった場合は最も小さいインデックス。それ以外の
+ *     場合は、(-(比較地点) - 1) 。 比較地点は、与えられた配列中に検索対象が存在
+ *     した場合のインデックスと一致する。検索対象が見つかった場合は正の値が返
+ *     る。
  */
 goog.array.binarySearch = function(arr, target, opt_compareFn) {
   return goog.array.binarySearch_(arr,
@@ -864,26 +853,22 @@ goog.array.binarySearch = function(arr, target, opt_compareFn) {
 
 
 /**
- * Selects an index in the specified array using the binary search algorithm.
- * The evaluator receives an element and determines whether the desired index
- * is before, at, or after it.  The evaluator must be consistent (formally,
- * goog.array.map(goog.array.map(arr, evaluator, opt_obj), goog.math.sign)
- * must be monotonically non-increasing).
+ * 与えられた配列の各要素を 2 分探索のようにして評価していく。
+ * 評価関数は選択したい要素のインデックスが今のインデックスより小さい・ここ・
+ * 大きいのどれなのかを指定する。評価関数は一貫性している必要がある（形式的にい
+ * えば {@code goog.array.map(goog.array.map(arr, evaluator, opt_obj),
+ *  goog.math.sign)} が単調非増加でなければならない）。
  *
- * Runtime: O(log n)
+ * 実行時間のオーダー: O(log n)
  *
- * @param {goog.array.ArrayLike} arr The array to be searched.
- * @param {Function} evaluator Evaluator function that receives 3 arguments
- *     (the element, the index and the array). Should return a negative number,
- *     zero, or a positive number depending on whether the desired index is
- *     before, at, or after the element passed to it.
- * @param {Object=} opt_obj The object to be used as the value of 'this'
- *     within evaluator.
- * @return {number} Index of the leftmost element matched by the evaluator, if
- *     such exists; otherwise (-(insertion point) - 1). The insertion point is
- *     the index of the first element for which the evaluator returns negative,
- *     or arr.length if no such element exists. The return value is non-negative
- *     iff a match is found.
+ * @param {goog.array.ArrayLike} arr 検索したい配列。
+ * @param {Function} evaluator 評価関数は今の要素・インデックス・検索対象の配列
+ *     の 3 つの引数をとる。前方・現在の位置・後方のインデックスを探したい場合に
+ *     戻り値はそれぞれ負・ 0 ・正の値をとるべきである。
+ * @param {Object=} opt_obj 評価関数の実行時に 'this' に設定されるオブジェクト。
+ * @return {number} 比較関数によって一致した最も左の要素のインデックス。それ以外
+ *     の場合は、(-(比較地点) - 1) 。 もし要素が見つからなかった場合、比較地点は
+ *     負の値か arr.length となる。検索対象が見つかった場合は正の値が返る。
  */
 goog.array.binarySelect = function(arr, evaluator, opt_obj) {
   return goog.array.binarySearch_(arr, evaluator, true /* isEvaluator */,
@@ -892,36 +877,31 @@ goog.array.binarySelect = function(arr, evaluator, opt_obj) {
 
 
 /**
- * Implementation of a binary search algorithm which knows how to use both
- * comparison functions and evaluators. If an evaluator is provided, will call
- * the evaluator with the given optional data object, conforming to the
- * interface defined in binarySelect. Otherwise, if a comparison function is
- * provided, will call the comparison function against the given data object.
+ * 2 分探索の比較関数と評価関数の実行手順を司る実装。引数が評価関数の場合は
+ * {@link goog.array.binarySelect} のようにして評価関数のコンテキストを
+ * 指定できる。引数が比較関数の場合には評価関数のコンテキストは指定できない。
  *
- * This implementation purposefully does not use goog.bind or goog.partial for
- * performance reasons.
+ * この実装はパフォーマンスにまつわる理由で {@link goog.bind} や
+ * {@link goog.partial} を用いていない。
  *
- * Runtime: O(log n)
+ * 実行時間のオーダー： O(log n)
  *
- * @param {goog.array.ArrayLike} arr The array to be searched.
- * @param {Function} compareFn Either an evaluator or a comparison function,
- *     as defined by binarySearch and binarySelect above.
- * @param {boolean} isEvaluator Whether the function is an evaluator or a
- *     comparison function.
- * @param {*=} opt_target If the function is a comparison function, then this is
- *     the target to binary search for.
- * @param {Object=} opt_selfObj If the function is an evaluator, this is an
-  *    optional this object for the evaluator.
- * @return {number} Lowest index of the target value if found, otherwise
- *     (-(insertion point) - 1). The insertion point is where the value should
- *     be inserted into arr to preserve the sorted property.  Return value >= 0
- *     iff target is found.
+ * @param {goog.array.ArrayLike} arr 検索したい配列。
+ * @param {Function} compareFn  評価関数と比較関数のどちらか。
+ * @param {boolean} isEvaluator compareFn が評価関数か否か。
+ * @param {*=} opt_target compareFn が比較関数の場合は検索対象のオブジェクト。
+ * @param {Object=} opt_selfObj compareFn が評価関数の場合のコンテキストオブジェ
+ *     クト。
+ * @return {number} 検索対象が見つかった場合は最も小さいインデックス。それ以外の
+ *     場合は、(-(比較地点) - 1) 。 比較地点は、与えられた配列中に検索対象が存在
+ *     した場合のインデックスと一致する。検索対象が見つかった場合は正の値が返
+ *     る。
  * @private
  */
 goog.array.binarySearch_ = function(arr, compareFn, isEvaluator, opt_target,
     opt_selfObj) {
-  var left = 0;  // inclusive
-  var right = arr.length;  // exclusive
+  var left = 0;  // は範囲に含まれる
+  var right = arr.length;  // は範囲に含まれない
   var found;
   while (left < right) {
     var middle = (left + right) >> 1;
@@ -935,37 +915,33 @@ goog.array.binarySearch_ = function(arr, compareFn, isEvaluator, opt_target,
       left = middle + 1;
     } else {
       right = middle;
-      // We are looking for the lowest index so we can't return immediately.
+      // 最も小さいインデックスを返したいので直ちに値は返さない。
       found = !compareResult;
     }
   }
-  // left is the index if found, or the insertion point otherwise.
-  // ~left is a shorthand for -left - 1.
+  // left は見つかった場合のインデックス。見つからなかった場合は比較地点。
+  // ~left は -left - 1 の省略形（~ はビット反転演算子）。
   return found ? left : ~left;
 };
 
 
 /**
- * Sorts the specified array into ascending order.  If no opt_compareFn is
- * specified, elements are compared using
- * <code>goog.array.defaultCompare</code>, which compares the elements using
- * the built in < and > operators.  This will produce the expected behavior
- * for homogeneous arrays of String(s) and Number(s), unlike the native sort,
- * but will give unpredictable results for heterogenous lists of strings and
- * numbers with different numbers of digits.
+ * 与えられた配列を昇順でソートする。 opt_compare_Fn が省略された場合は組み込み
+ * の < と > で評価する {@code goog.array.defaultCompare} が用いられる。この評価
+ * 関数は文字列か数値によって構成される配列を正しく評価できる。このメソッドでは
+ * 評価関数によって値が一致したと判定された要素の並び順は保証されない。
  *
- * This sort is not guaranteed to be stable.
+ * このソートは安定であることを保証されない。
  *
- * Runtime: Same as <code>Array.prototype.sort</code>
+ * 実行時間： {@code Array.prototype.sort} と同じ
  *
- * @param {Array} arr The array to be sorted.
- * @param {Function=} opt_compareFn Optional comparison function by which the
- *     array is to be ordered. Should take 2 arguments to compare, and return a
- *     negative number, zero, or a positive number depending on whether the
- *     first argument is less than, equal to, or greater than the second.
+ * @param {Array} arr ソートしたい配列。
+ * @param {Function=} opt_compareFn 配列の順を定めている比較関数。省略可能。
+ *     2 つの引数が与えられ、戻り値が負の場合・0 の場合・正の場合について、それ
+ *     ぞれ第一引数より第二引数が小なり・等しい・大なりの場合と対応する。
  */
 goog.array.sort = function(arr, opt_compareFn) {
-  // TODO(arv): Update type annotation since null is not accepted.
+  // TODO(arv): null が許可されなくなってからの評価に改めるべき。
   goog.asserts.assert(arr.length != null);
 
   goog.array.ARRAY_PROTOTYPE_.sort.call(
@@ -974,21 +950,19 @@ goog.array.sort = function(arr, opt_compareFn) {
 
 
 /**
- * Sorts the specified array into ascending order in a stable way.  If no
- * opt_compareFn is specified, elements are compared using
- * <code>goog.array.defaultCompare</code>, which compares the elements using
- * the built in < and > operators.  This will produce the expected behavior
- * for homogeneous arrays of String(s) and Number(s).
+ * 与えられた配列を安定的な方法でソートする。 opt_compare_Fn が省略された場合は
+ * 組み込みの < と > で評価する {@code goog.array.defaultCompare} が用いられる。
+ * この評価関数は文字列か数値によって構成される配列を正しく評価できる。
  *
- * Runtime: Same as <code>Array.prototype.sort</code>, plus an additional
- * O(n) overhead of copying the array twice.
+ * このソートでは値が等しいと判定された場合、インデックスの大小で評価される。
  *
- * @param {Array} arr The array to be sorted.
- * @param {function(*, *): number=} opt_compareFn Optional comparison function
- *     by which the array is to be ordered. Should take 2 arguments to compare,
- *     and return a negative number, zero, or a positive number depending on
- *     whether the first argument is less than, equal to, or greater than the
- *     second.
+ * 実行時間： {@code Array.prototype.sort} と同じだが、 O(n) のオーダーで配列を
+ * 2 回コピーする分のオーバーヘッドが加わる。
+ *
+ * @param {Array} arr ソートしたい配列。
+ * @param {Function=} opt_compareFn 配列の順を定めている比較関数。省略可能。
+ *     2 つの引数が与えられ、戻り値が負の場合・0 の場合・正の場合について、それ
+ *     ぞれ第一引数が第二引数より小さい・等しい・大きい場合と対応する。
  */
 goog.array.stableSort = function(arr, opt_compareFn) {
   for (var i = 0; i < arr.length; i++) {
@@ -1006,15 +980,16 @@ goog.array.stableSort = function(arr, opt_compareFn) {
 
 
 /**
- * Sorts an array of objects by the specified object key and compare
- * function. If no compare function is provided, the key values are
- * compared in ascending order using <code>goog.array.defaultCompare</code>.
- * This won't work for keys that get renamed by the compiler. So use
- * {'foo': 1, 'bar': 2} rather than {foo: 1, bar: 2}.
- * @param {Array.<Object>} arr An array of objects to sort.
- * @param {string} key The object key to sort by.
- * @param {Function=} opt_compareFn The function to use to compare key
- *     values.
+ * オブジェクトからなる配列を指定されたキーの要素でソートする。 opt_compare_Fn
+ * が省略された場合は組み込みの < と > で評価する
+ * {@code goog.array.defaultCompare} が用いられる。
+ * このメソッドはコンパイラによってリネームされた場合に正しく動作しない。
+ * なので {foo: 1, bar: 2} ではなく {'foo': 1, 'bar': 2} と書かなければならな
+ * い。
+ *
+ * @param {Array.<Object>} arr ソートしたいオブジェクトからなる配列。
+ * @param {string} key ソートの際に用いるキー。
+ * @param {Function=} opt_compareFn 値を比較する関数。
  */
 goog.array.sortObjectsByKey = function(arr, key, opt_compareFn) {
   var compare = opt_compareFn || goog.array.defaultCompare;
@@ -1025,14 +1000,13 @@ goog.array.sortObjectsByKey = function(arr, key, opt_compareFn) {
 
 
 /**
- * Tells if the array is sorted.
- * @param {!Array} arr The array.
- * @param {Function=} opt_compareFn Function to compare the array elements.
- *     Should take 2 arguments to compare, and return a negative number, zero,
- *     or a positive number depending on whether the first argument is less
- *     than, equal to, or greater than the second.
- * @param {boolean=} opt_strict If true no equal elements are allowed.
- * @return {boolean} Whether the array is sorted.
+ * 配列がソート済みかどうかを判定する。
+ * @param {!Array} arr 配列。
+ * @param {Function=} opt_compareFn 配列の順を定めている比較関数。省略可能。
+ *     2 つの引数が与えられ、戻り値が負の場合・0 の場合・正の場合について、それ
+ *     ぞれ第一引数が第二引数より小さい・等しい・大きい場合と対応する。
+ * @param {boolean=} opt_strict true にすると値が等しい場合も false を返す。
+ * @return {boolean} 配列がソート済みかどうか。
  */
 goog.array.isSorted = function(arr, opt_compareFn, opt_strict) {
   var compare = opt_compareFn || goog.array.defaultCompare;
@@ -1047,17 +1021,15 @@ goog.array.isSorted = function(arr, opt_compareFn, opt_strict) {
 
 
 /**
- * Compares two arrays for equality. Two arrays are considered equal if they
- * have the same length and their corresponding elements are equal according to
- * the comparison function.
+ * 2 つの配列が等しいかどうかを判定する。2 つの配列の要素数が同じで含まれている
+ * 要素が比較関数によってすべて等しいかどうかを判定される。
  *
- * @param {goog.array.ArrayLike} arr1 The first array to compare.
- * @param {goog.array.ArrayLike} arr2 The second array to compare.
- * @param {Function=} opt_equalsFn Optional comparison function.
- *     Should take 2 arguments to compare, and return true if the arguments
- *     are equal. Defaults to {@link goog.array.defaultCompareEquality} which
- *     compares the elements using the built-in '===' operator.
- * @return {boolean} Whether the two arrays are equal.
+ * @param {goog.array.ArrayLike} arr1 判定する配列。
+ * @param {goog.array.ArrayLike} arr2 判定する配列。
+ * @param {Function=} opt_equalsFn 省略可能な比較関数。2 つの引数が一致すれば
+ *     true 、一致しなければ false を返す。省略時は組み込みの '===' 演算子を用い
+ *     る {@link goog.array.defaultCompareEquality} が使われる。
+ * @return {boolean} 2 つの配列が等しいかどうか。
  */
 goog.array.equals = function(arr1, arr2, opt_equalsFn) {
   if (!goog.isArrayLike(arr1) || !goog.isArrayLike(arr2) ||
@@ -1076,7 +1048,7 @@ goog.array.equals = function(arr1, arr2, opt_equalsFn) {
 
 
 /**
- * @deprecated Use {@link goog.array.equals}.
+ * @deprecated {@link goog.array.equals} を使うべき。
  * @param {goog.array.ArrayLike} arr1 {@link goog.array.equals} を参照。
  * @param {goog.array.ArrayLike} arr2 {@link goog.array.equals} を参照。
  * @param {Function=} opt_equalsFn {@link goog.array.equals} を参照。
@@ -1088,17 +1060,14 @@ goog.array.compare = function(arr1, arr2, opt_equalsFn) {
 
 
 /**
- * 3-way array compare function.
- * @param {!goog.array.ArrayLike} arr1 The first array to compare.
- * @param {!goog.array.ArrayLike} arr2 The second array to compare.
- * @param {(function(*, *): number)=} opt_compareFn Optional comparison function
- *     by which the array is to be ordered. Should take 2 arguments to compare,
- *     and return a negative number, zero, or a positive number depending on
- *     whether the first argument is less than, equal to, or greater than the
- *     second.
- * @return {number} Negative number, zero, or a positive number depending on
- *     whether the first argument is less than, equal to, or greater than the
- *     second.
+ * 2 つの配列の大小または一致を判定する。
+ * @param {!goog.array.ArrayLike} arr1 判定する配列。
+ * @param {!goog.array.ArrayLike} arr2 判定する配列。
+ * @param {Function=} opt_compareFn 配列の順を定めている比較関数。省略可能。
+ *     2 つの引数が与えられ、戻り値が負の場合・0 の場合・正の場合について、それ
+ *     ぞれ第一引数が第二引数より小さい・等しい・大きい場合と対応する。
+ * @return {number} 負・ 0 ・正の場合について、それぞれ arr1 が arr2
+ *     よりが小さい・等しい・大きい場合と対応する。
  */
 goog.array.compare3 = function(arr1, arr2, opt_compareFn) {
   var compare = opt_compareFn || goog.array.defaultCompare;
@@ -1114,12 +1083,11 @@ goog.array.compare3 = function(arr1, arr2, opt_compareFn) {
 
 
 /**
- * Compares its two arguments for order, using the built in < and >
- * operators.
- * @param {*} a The first object to be compared.
- * @param {*} b The second object to be compared.
- * @return {number} A negative number, zero, or a positive number as the first
- *     argument is less than, equal to, or greater than the second.
+ * 2 つの値を組み込みの < と > 演算子によって比較する。
+ * @param {*} a 比較する要素。
+ * @param {*} b 比較する要素。
+ * @return {number} 負・ 0 ・正の場合について、それぞれ a が b よりが小さい・等
+ *     しい・大きい場合と対応する。
  */
 goog.array.defaultCompare = function(a, b) {
   return a > b ? 1 : a < b ? -1 : 0;
@@ -1127,10 +1095,10 @@ goog.array.defaultCompare = function(a, b) {
 
 
 /**
- * Compares its two arguments for equality, using the built in === operator.
- * @param {*} a The first object to compare.
- * @param {*} b The second object to compare.
- * @return {boolean} True if the two arguments are equal, false otherwise.
+ * 2 つの値を組み込みの '===' 演算子によって比較する。
+ * @param {*} a 比較する要素。
+ * @param {*} b 比較する要素。
+ * @return {boolean} 一致すれば true 一致しなければ false 。
  */
 goog.array.defaultCompareEquality = function(a, b) {
   return a === b;
@@ -1138,14 +1106,13 @@ goog.array.defaultCompareEquality = function(a, b) {
 
 
 /**
- * Inserts a value into a sorted array. The array is not modified if the
- * value is already present.
- * @param {Array} array The array to modify.
- * @param {*} value The object to insert.
- * @param {Function=} opt_compareFn Optional comparison function by which the
- *     array is ordered. Should take 2 arguments to compare, and return a
- *     negative number, zero, or a positive number depending on whether the
- *     first argument is less than, equal to, or greater than the second.
+ * ソートされた配列の中に値を挿入する。値が既に存在している場合、配列は変更され
+ * ない。
+ * @param {Array} array 変更される配列。
+ * @param {*} value 挿入されるオブジェクト。
+ * @param {Function=} opt_compareFn 配列の順を定めている比較関数。省略可能。
+ *     2 つの引数が与えられ、戻り値が負の場合・0 の場合・正の場合について、それ
+ *     ぞれ第一引数が第二引数より小さい・等しい・大きい場合と対応する。
  * @return {boolean} True if an element was inserted.
  */
 goog.array.binaryInsert = function(array, value, opt_compareFn) {
@@ -1159,14 +1126,13 @@ goog.array.binaryInsert = function(array, value, opt_compareFn) {
 
 
 /**
- * Removes a value from a sorted array.
- * @param {Array} array The array to modify.
- * @param {*} value The object to remove.
- * @param {Function=} opt_compareFn Optional comparison function by which the
- *     array is ordered. Should take 2 arguments to compare, and return a
- *     negative number, zero, or a positive number depending on whether the
- *     first argument is less than, equal to, or greater than the second.
- * @return {boolean} True if an element was removed.
+ * ソートされた配列から与えられた値と一致する値を削除する。
+ * @param {Array} array 変更される配列。
+ * @param {*} value 削除されるオブジェクト。
+ * @param {Function=} opt_compareFn 配列の順を定めている比較関数。省略可能。
+ *     2 つの引数が与えられ、戻り値が負の場合・0 の場合・正の場合について、それ
+ *     ぞれ第一引数が第二引数より小さい・等しい・大きい場合と対応する。
+ * @return {boolean} 値が削除されれば true 。
  */
 goog.array.binaryRemove = function(array, value, opt_compareFn) {
   var index = goog.array.binarySearch(array, value, opt_compareFn);
@@ -1175,15 +1141,15 @@ goog.array.binaryRemove = function(array, value, opt_compareFn) {
 
 
 /**
- * Splits an array into disjoint buckets according to a splitting function.
- * @param {Array} array The array.
- * @param {Function} sorter Function to call for every element.  This
- *     takes 3 arguments (the element, the index and the array) and must
- *     return a valid object key (a string, number, etc), or undefined, if
- *     that object should not be placed in a bucket.
- * @return {!Object} An object, with keys being all of the unique return values
- *     of sorter, and values being arrays containing the items for
- *     which the splitter returned that key.
+ * 与えられた配列の各要素を判別関数によってオブジェクトのなかの配列ごとに分別し
+ * て格納する。
+ * @param {Array} array 配列。
+ * @param {Function} sorter 各要素について実行される関数。 この関数は、現在の要
+ *     素・インデックス・与えられた配列の 3 つの引数をとる。戻り値はオブジェクト
+ *     のキーにできるもの（文字列、数値など）で互いに異なっている必要がある。
+ *     戻り値が undefined の場合、その要素は追加されない。
+ * @return {!Object} sorter によって生成されたユニークなキーにマッピングされた配
+ *     列要からなるオブジェクト。
  */
 goog.array.bucket = function(array, sorter) {
   var buckets = {};
@@ -1192,7 +1158,7 @@ goog.array.bucket = function(array, sorter) {
     var value = array[i];
     var key = sorter(value, i, array);
     if (goog.isDef(key)) {
-      // Push the value to the right bucket, creating it if necessary.
+      // 配列が未定義の場合は空配列を代入する。
       var bucket = buckets[key] || (buckets[key] = []);
       bucket.push(value);
     }
@@ -1203,11 +1169,11 @@ goog.array.bucket = function(array, sorter) {
 
 
 /**
- * Returns an array consisting of the given value repeated N times.
+ * 値が N 回繰り返された配列を返す。
  *
- * @param {*} value The value to repeat.
- * @param {number} n The repeat count.
- * @return {!Array} An array with the repeated value.
+ * @param {*} value 繰り返すオブジェクト。
+ * @param {number} n 繰り返す回数。
+ * @return {!Array} 繰り返されたオブジェクトからなる配列。
  */
 goog.array.repeat = function(value, n) {
   var array = [];
@@ -1219,11 +1185,10 @@ goog.array.repeat = function(value, n) {
 
 
 /**
- * Returns an array consisting of every argument with all arrays
- * expanded in-place recursively.
+ * 与えられた要素を平たい配列に変換する。要素が配列の場合は再帰的に処理される。
  *
- * @param {...*} var_args The values to flatten.
- * @return {!Array.<*>} An array containing the flattened values.
+ * @param {...*} var_args 平たい配列に変換したいオブジェクト。
+ * @return {!Array.<*>} 与えられたオブジェクトからなる平たい配列。
  */
 goog.array.flatten = function(var_args) {
   var result = [];
@@ -1240,17 +1205,16 @@ goog.array.flatten = function(var_args) {
 
 
 /**
- * Rotates an array in-place. After calling this method, the element at
- * index i will be the element previously at index (i - n) %
- * array.length, for all values of i between 0 and array.length - 1,
- * inclusive.
+ * 配列を破壊的にローテート（要素をずらす）する。このメソッドが実行された後の
+ * i 番目の要素は前の (i - n) % array.length 番目の要素になる。すべての i は 0
+ * から array.length - 1 の範囲に収まる。
  *
- * For example, suppose list comprises [t, a, n, k, s]. After invoking
- * rotate(array, 1) (or rotate(array, -4)), array will comprise [s, t, a, n, k].
+ * 例えば、 [t, a, n, k, s] が与えられ、 rotate(array, 1) （または
+ * rotate(array, -4) ）が実行されると配列は [s, t, a, n, k] のようになる。
  *
- * @param {!Array.<*>} array The array to rotate.
- * @param {number} n The amount to rotate.
- * @return {!Array.<*>} The array.
+ * @param {!Array.<*>} array ローテートしたい配列。
+ * @param {number} n ローテ—トする回数。
+ * @return {!Array.<*>} 配列。
  */
 goog.array.rotate = function(array, n) {
   goog.asserts.assert(array.length != null);
@@ -1268,16 +1232,18 @@ goog.array.rotate = function(array, n) {
 
 
 /**
- * Creates a new array for which the element at position i is an array of the
- * ith element of the provided arrays.  The returned array will only be as long
- * as the shortest array provided; additional values are ignored.  For example,
- * the result of zipping [1, 2] and [3, 4, 5] is [[1,3], [2, 4]].
  *
- * This is similar to the zip() function in Python.  See {@link
- * http://docs.python.org/library/functions.html#zip}
+ * 与えられた配列の同じ位置の要素を要素とした配列を配列にまとめて返す。
+ * 返される配列はもっとも小さい配列の要素数にあわせられ、余った要素は無視され
+ * る。例えば、 [1, 2] と [3, 4, 5] が与えられた場合、結果は [[1,3], [2, 4]] と
+ * なる。
  *
- * @param {...!goog.array.ArrayLike} var_args Arrays to be combined.
- * @return {!Array.<!Array>} A new array of arrays created from provided arrays.
+ * これは Python の zip() と同じような働きをする。 {@link
+ * http://docs.python.org/library/functions.html#zip} を参照。
+ *
+ * @param {...!goog.array.ArrayLike} var_args 要素を取り出す配列。
+ * @return {!Array.<!Array>} 与えられた要素がインデックス毎にまとめられた新しい
+ *      配列。
  */
 goog.array.zip = function(var_args) {
   if (!arguments.length) {
@@ -1288,7 +1254,7 @@ goog.array.zip = function(var_args) {
     var value = [];
     for (var j = 0; j < arguments.length; j++) {
       var arr = arguments[j];
-      // If i is larger than the array length, this is the shortest array.
+      // もし、 i が arr.length よりも大きければこれが最も小さい配列。
       if (i >= arr.length) {
         return result;
       }
@@ -1300,23 +1266,22 @@ goog.array.zip = function(var_args) {
 
 
 /**
- * Shuffles the values in the specified array using the Fisher-Yates in-place
- * shuffle (also known as the Knuth Shuffle). By default, calls Math.random()
- * and so resets the state of that random number generator. Similarly, may reset
- * the state of the any other specified random number generator.
+ * 与えられた配列の要素を Fisher-Yates のアルゴリズム（ Knush のシャッフルとして
+ * 知られている ）によって破壊的にシャッフルする。標準では Math.random() が利用
+ * されるが、乱数生成関数を指定することもできる。
  *
- * Runtime: O(n)
+ * 実行時間のオーダー： O(n)
  *
- * @param {!Array} arr The array to be shuffled.
- * @param {Function=} opt_randFn Optional random function to use for shuffling.
- *     Takes no arguments, and returns a random number on the interval [0, 1).
- *     Defaults to Math.random() using JavaScript's built-in Math library.
+ * @param {!Array} arr シャッフルしたい配列。
+ * @param {Function=} opt_randFn シャッフルで利用する乱数生成関数。省略可能。
+ *     引数はとらず、 0 〜 1 までの値を返す関数でなければならない。
+ *     省略時は組み込みの Math.random() が用いられる。
  */
 goog.array.shuffle = function(arr, opt_randFn) {
   var randFn = opt_randFn || Math.random;
 
   for (var i = arr.length - 1; i > 0; i--) {
-    // Choose a random array index in [0, i] (inclusive with i).
+    // 0 〜 i のインデックスを選択する。
     var j = Math.floor(randFn() * (i + 1));
 
     var tmp = arr[i];
