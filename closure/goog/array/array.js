@@ -13,7 +13,7 @@
 // limitations under the License.
 
 /**
- * @fileoverview Utilities for manipulating arrays.
+ * @fileoverview 配列を走査するためのユーティリティ。
  *
  */
 
