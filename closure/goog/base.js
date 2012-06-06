@@ -33,7 +33,7 @@ var COMPILED = false;
  * Closure Library のトップレベル名前空間。現在のスコープで既に goog が定義され
  * ている場合には、繰り返し定義されてしまうことを防ぐ。
  *
- * @const
+ * @namespace
  */
 var goog = goog || {}; // Closure Library の基となる識別子。
 
@@ -474,8 +474,8 @@ goog.addSingletonGetter = function(ctor) {
 /**
  * テストのためにインスタンス化されたすべてのシングルトンクラスが格納される。
  * ただし、これを直接読み込んではならない。 {@link goog.testing.singleton} モ
- * ジュールを使うべきである。これによって、コンパイラは変数が使われていない場合
- * に除去することができるようになる。
+ * ジュールを使うべきである。これによって、コンパイラはこの変数が使われていない
+ * 場合に除去することができるようになる。
  *
  * @type {!Array.<!Function>}
  * @private
@@ -960,7 +960,7 @@ goog.uidCounter_ = 0;
 
 
 /**
- * ハッシュをオブジェクトに追加する。このハッシュは。オブジェクト毎に固有の値で
+ * ハッシュをオブジェクトに追加する。このハッシュはオブジェクト毎に固有の値で
  * ある。
  * @param {Object} obj ハッシュを作成したいオブジェクト。
  * @return {number} このオブジェクトのハッシュ値。
@@ -1023,14 +1023,12 @@ Object.prototype.clone;
 
 
 /**
- * {@link goog.bind} のネイティブな実装。
- * @param {Function} fn A function to partially apply.
- * @param {Object|undefined} selfObj Specifies the object which |this| should
- *     point to when the function is run.
- * @param {...*} var_args Additional arguments that are partially
- *     applied to the function.
- * @return {!Function} A partially-applied form of the function bind() was
- *     invoked as a method of.
+ * ネイティブな {@link goog.bind} を利用する実装。
+ * @param {Function} fn 部分適用したい関数。
+ * @param {Object|undefined} selfObj 与えられた関数の 'this' に束縛したいオブ
+ *     ジェクト。
+ * @param {...*} var_args 関数の部分適用で与えられる可変長引数。
+ * @return {!Function} 引数の部分適用 + 'this' が束縛された新しい関数。
  * @private
  * @suppress {deprecated} The compiler thinks that Function.prototype.bind
  *     is deprecated because some people have declared a pure-JS version.
@@ -1042,14 +1040,13 @@ goog.bindNative_ = function(fn, selfObj, var_args) {
 
 
 /**
- * A pure-JS implementation of goog.bind.
- * @param {Function} fn A function to partially apply.
- * @param {Object|undefined} selfObj Specifies the object which |this| should
- *     point to when the function is run.
- * @param {...*} var_args Additional arguments that are partially
- *     applied to the function.
- * @return {!Function} A partially-applied form of the function bind() was
- *     invoked as a method of.
+ * ネイティブなコードを使わない、 JavaScript のみによる {@link goog.bind} の実
+ * 装。
+ * @param {Function} fn 部分適用したい関数。
+ * @param {Object|undefined} selfObj 与えられた関数の 'this' に束縛したいオブ
+ *     ジェクト。
+ * @param {...*} var_args 関数の部分適用で与えられる可変長引数。
+ * @return {!Function} 引数の部分適用 + 'this' が束縛された新しい関数。
  * @private
  */
 goog.bindJs_ = function(fn, selfObj, var_args) {
@@ -1075,12 +1072,9 @@ goog.bindJs_ = function(fn, selfObj, var_args) {
 
 
 /**
- * 与えられたオブジェクトが関数の 'this' オブジェクトとなるような新しい関数を返
- * す。引数が指定された場合は、引数も暗黙的に新しい関数に与えられる（関数の部分
- * 適用 + 'this' の束縛）。
- *
- * これによって生成された関数に引数が与えられた場合、暗黙的に与えられた関数に続
- * いて指定される。
+ * 与えられたオブジェクトが関数の 'this' オブジェクトとなるような、部分適用され
+ * た新しい関数を返す。引数が指定された場合は、新しい関数の引数の前に与えられ
+ * る。引数も新しい関数に与えられる（関数の部分適用 + 'this' の束縛）。
  *
  * こちらも参照： {@link goog.partial}
  *
@@ -1091,7 +1085,7 @@ goog.bindJs_ = function(fn, selfObj, var_args) {
  * @note orga.chem.job@gmail.com (OrgaChem) 
  * 上の引数の振る舞いは、
  * <pre>barMethBound('arg3', 'arg4')</pre>
- * が下のようなコードと等価であるということです。
+ * が下のようなコードと等価であるということである。
  * <pre>myFunction.call(myObj, 'arg1', 'arg2', 'arg3', 'arg4')</pre>
  *
  * @param {Function} fn 部分適用 + 'this' の束縛をしたい関数。
@@ -1104,13 +1098,11 @@ goog.bindJs_ = function(fn, selfObj, var_args) {
 goog.bind = function(fn, selfObj, var_args) {
   // TODO(nicksantos): narrow the type signature.
   if (Function.prototype.bind &&
-      // NOTE(nicksantos): Somebody pulled base.js into the default
-      // Chrome extension environment. This means that for Chrome extensions,
-      // they get the implementation of Function.prototype.bind that
-      // calls goog.bind instead of the native one. Even worse, we don't want
-      // to introduce a circular dependency between goog.bind and
-      // Function.prototype.bind, so we have to hack this to make sure it
-      // works correctly.
+      // NOTE(nicksantos): Chrome extension 環境で base.js を利用している人がい
+      // て、その人は Function.prototype.bind に goog.bind を実装してしまってい
+      // る。そうすると、この関数はネイティブな Function.prototype.bind があると
+      // 勘違いして循環参照を起こしてしまう。この場合でも巧く動くようにハックし
+      // ないとね。
       Function.prototype.bind.toString().indexOf('native code') != -1) {
     goog.bind = goog.bindNative_;
   } else {
@@ -1131,7 +1123,7 @@ goog.bind = function(fn, selfObj, var_args) {
  * @note orga.chem.job@gmail.com (OrgaChem) 
  * 上の引数の振る舞いは、
  * <pre>g('arg3', 'arg4')</pre>
- * が下のようなコードと等価であるということです。
+ * が下のようなコードと等価であるということである。
  * <pre>f.call(this, 'arg1', 'arg2', 'arg3', 'arg4')</pre>
  *
  * @param {Function} fn 部分適用したい関数。
@@ -1180,14 +1172,10 @@ goog.now = Date.now || (function() {
 
 
 /**
- * Evals javascript in the global scope.  In IE this uses execScript, other
- * browsers use goog.global.eval. If goog.global.eval does not evaluate in the
- * global scope (for example, in Safari), appends a script tag instead.
- * Throws an exception if neither execScript or eval is defined.
  * グローバルスコープで JavaScript を実行する。 IE 上であれば execScript を使
  * い、IE 以外のブラウザでは {@link goog.global.eval} を使う。もし、 Safari のよ
  * うに {@link goog.global.eval} がグローバルスコープで実行されない場合はスクリ
- * プトタグの埋め込みよって実現する。 execScript か ecal が定義されていなければ
+ * プトタグの埋め込みよって実現する。 execScript か eval が定義されていなければ
  * エラーが発生する。
  * @param {string} script JavaScript 文字列。
  */
@@ -1236,8 +1224,8 @@ goog.evalWorksForGlobals_ = null;
 
 
 /**
- * Optional map of CSS class names to obfuscated names used with
- * goog.getCssName().
+ * {@link goog.setCssNameMapping} で設定された CSS クラス名を保存しておくための
+ * オブジェクト。
  * @type {Object|undefined}
  * @private
  * @see goog.setCssNameMapping
@@ -1246,8 +1234,10 @@ goog.cssNameMapping_;
 
 
 /**
- * Optional obfuscation style for CSS class names. Should be set to either
- * 'BY_WHOLE' or 'BY_PART' if defined.
+ * {@link goog.getCssName} の引数が CSS クラス名そのものなのか、 CSS クラス名の
+ * 集まりなのかを判断するための値。 CSS クラス名そのものであれば 'BY_WHOLE' 、
+ * CSS クラス名の断片であれば 'BY_PART' 。 undefined は 'BY'_PART' だとみなされ
+ * る。
  * @type {string|undefined}
  * @private
  * @see goog.setCssNameMapping
@@ -1256,36 +1246,39 @@ goog.cssNameMappingStyle_;
 
 
 /**
- * Handles strings that are intended to be used as CSS class names.
+ * 与えられた文字列から対応する CSS クラス名を返す。
  *
- * This function works in tandem with @see goog.setCssNameMapping.
+ * この関数は {@link goog.setCssNameMapping} と連携して動作する。
  *
- * Without any mapping set, the arguments are simple joined with a
- * hyphen and passed through unaltered.
+ * CSS クラス名が見つからない場合は与えられた文字列がそのまま返される。 
+ * <code>opt_modifier</code> が指定されている場合は <code>-</code> 繋がりの文字
+ * 列が返される。
  *
- * When there is a mapping, there are two possible styles in which
- * these mappings are used. In the BY_PART style, each part (i.e. in
- * between hyphens) of the passed in css name is rewritten according
- * to the map. In the BY_WHOLE style, the full css name is looked up in
- * the map directly. If a rewrite is not specified by the map, the
- * compiler will output a warning.
+ * CSS クラス名マップが与えられた場合は、 <code>BY_PART</code> と
+ * <code>BY_WHOLE</code> の 2 つの引数の形式が利用できる。 <code>BY_PART</code>
+ * の場合、引数は <code>-</code> 繋がりの複数の文字列として扱われ、ぞれぞれマッ
+ * プが該当する CSS クラス名に変換されて返される。 <code>BY_WHOLE</code> の場合
+ * は、与えられた文字列そのものに該当する CSS クラス名が返される。
+ * If a rewrite is not specified by the map, the compiler will output a warning.
  *
- * When the mapping is passed to the compiler, it will replace calls
- * to goog.getCssName with the strings from the mapping, e.g.
- *     var x = goog.getCssName('foo');
- *     var y = goog.getCssName(this.baseClass, 'active');
- *  becomes:
- *     var x= 'foo';
- *     var y = this.baseClass + '-active';
+ * CSS クラス名マップがコンパイルされた場合、 {@link goog.getCssName} は以下のよ
+ * うに書き換えられる。
+ * 例：
+ * <pre>var x = goog.getCssName('foo');
+ * var y = goog.getCssName(this.baseClass, 'active');</pre>
+ * は、
+ * <pre>var x= 'foo';
+ * var y = this.baseClass + '-active';</pre>
+ * のように書き換えられる。
  *
- * If one argument is passed it will be processed, if two are passed
- * only the modifier will be processed, as it is assumed the first
- * argument was generated as a result of calling goog.getCssName.
+ * この関数は引数の数によって処理が異なる。
+ * 引数が 1 つだけ指定された場合は、この引数が変換される。引数が 2 つ指定された
+ * 場合は 2 つめの引数のみが変換される。したがって、この場合は 1 つめの引数をあ
+ * らかじめ {@link goog.getCssName} によって変換しておくことが望ましい。
  *
- * @param {string} className The class name.
- * @param {string=} opt_modifier A modifier to be appended to the class name.
- * @return {string} The class name or the concatenation of the class name and
- *     the modifier.
+ * @param {string} className CSS クラス名。
+ * @param {string=} opt_modifier CSS クラス名に付加する CSS クラス名。
+ * @return {string} 実際の CSS クラス名の文字列。
  */
 goog.getCssName = function(className, opt_modifier) {
   var getMapping = function(cssName) {
