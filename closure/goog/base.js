@@ -372,9 +372,9 @@ goog.global.CLOSURE_NO_DEPS;
  * ープで定義できるため、 base.js よりも前に読み込むことができる。この関数によっ
  * て非 HTML 環境でも deps.js による適切なインポートができる。
  *
- * この関数は相対 URI によってスクリプトを通さなければならない。この関数は、スク
- * リプトが無事インポートできたら true を返し、それ以外の場合には false を返すこ
- * とが望ましい。
+ * この関数は相対 URI によってスクリプトをインポートできる必要がある。この関数
+ * は、スクリプトが無事インポートできたら true を返し、それ以外の場合には false
+ * を返すことが望ましい。
  *
  * @note orga.chem.job@gmail.com (OrgaChem)
  * この変数を書き換えてサーバーサイド JavaScript エンジンの node.js 上で Closure
@@ -1408,9 +1408,11 @@ goog.exportSymbol = function(publicPath, object, opt_objectToExportTo) {
 
 
 /**
- * Exports a property unobfuscated into the object's namespace.
- * ex. goog.exportProperty(Foo, 'staticFunction', Foo.staticFunction);
- * ex. goog.exportProperty(Foo.prototype, 'myMethod', Foo.prototype.myMethod);
+ * 与えられたオブジェクトのメンバをコンパイラによるリネームから保護する。
+ * <pre>goog.exportProperty(Foo, 'staticFunction', Foo.staticFunction);</pre>
+ * <pre>goog.exportProperty(Foo.prototype,
+ *                     'myMethod',
+ *                     Foo.prototype.myMethod);</pre>
  * @param {Object} object Object whose static property is being exported.
  * @param {string} publicName Unobfuscated name to export.
  * @param {*} symbol Object the name should point to.
@@ -1421,9 +1423,9 @@ goog.exportProperty = function(object, publicName, symbol) {
 
 
 /**
- * Inherit the prototype methods from one constructor into another.
+ * 与えられたコンストラクタの <code>prototype</code> のメソッドを別のコンストラ
+ * クタに継承する。
  *
- * Usage:
  * <pre>
  * function ParentClass(a, b) { }
  * ParentClass.prototype.foo = function(a) { }
@@ -1437,8 +1439,7 @@ goog.exportProperty = function(object, publicName, symbol) {
  * child.foo(); // works
  * </pre>
  *
- * In addition, a superclass' implementation of a method can be invoked
- * as follows:
+ * サブクラスからスーパークラスにアクセスしたい場合は以下のようにやる。
  *
  * <pre>
  * ChildClass.prototype.foo = function(a) {
@@ -1462,34 +1463,33 @@ goog.inherits = function(childCtor, parentCtor) {
 
 
 /**
- * Call up to the superclass.
+ * スーパークラスを呼び出す。
  *
- * If this is called from a constructor, then this calls the superclass
- * contructor with arguments 1-N.
+ * サブクラスのコンストラクタで呼び出した場合は、 1 つ以上の引数付きで親クラ
+ * スのコンストラクタを実行する。
  *
- * If this is called from a prototype method, then you must pass
- * the name of the method as the second argument to this function. If
- * you do not, you will get a runtime error. This calls the superclass'
- * method with arguments 2-N.
+ * <code>prototype</code> のメソッドから呼び出した場合は、 2 つめの引数でこのメ
+ * ソッドの名前を指定する必要がある。名前を指定しなかった場合はランタイムエラー
+ * が投げられる。このメソッドは 2 つ以上の引数でスーパークラスのメソッドを実行す
+ * る。
  *
- * This function only works if you use goog.inherits to express
- * inheritance relationships between your classes.
+ * この関数は {@link goog.inherits} がなされたクラス上でのみ動作できる。
  *
- * This function is a compiler primitive. At compile-time, the
- * compiler will do macro expansion to remove a lot of
- * the extra overhead that this function introduces. The compiler
- * will also enforce a lot of the assumptions that this function
- * makes, and treat it as a compiler error if you break them.
+ * この関数はコンパイラプリミティブである。コンパイルの際にはマクロ展開が行わ
+ * れ、このコードによるオーバーヘッドが取り除かれる。この関数を使うときにはいく
+ * つかの取り決めに従う必要がある。その取り決めに違反があればコンパイラがエラー
+ * を投げる。
  *
- * @param {!Object} me Should always be "this".
- * @param {*=} opt_methodName The method name if calling a super method.
- * @param {...*} var_args The rest of the arguments.
- * @return {*} The return value of the superclass method.
+ * @param {!Object} me たいていは "this" 。
+ * @param {*=} opt_methodName スーパークラスのメソッドを呼び出すときにはそのメ
+ *     ソッド名。
+ * @param {...*} var_args スーパークラスの関数に与えられる可変長引数。
+ * @return {*} スーパークラスのメソッドによる戻り値。
  */
 goog.base = function(me, opt_methodName, var_args) {
   var caller = arguments.callee.caller;
   if (caller.superClass_) {
-    // This is a constructor. Call the superclass constructor.
+    // これはコンストラクタなのでスーパークラスのコンストラクタを呼び出す。
     return caller.superClass_.constructor.apply(
         me, Array.prototype.slice.call(arguments, 1));
   }
@@ -1505,10 +1505,10 @@ goog.base = function(me, opt_methodName, var_args) {
     }
   }
 
-  // If we did not find the caller in the prototype chain,
-  // then one of two things happened:
-  // 1) The caller is an instance method.
-  // 2) This method was not called by the right caller.
+  // もし呼び出し先がプロトタイプチェーンのなかから見つからなければ次のうちどち
+  // らかの場合である。
+  // 1) 呼び出し先はインスタンスメソッドである場合
+  // 2) 正しい呼び出し先でなかった場合
   if (me[opt_methodName] === caller) {
     return me.constructor.prototype[opt_methodName].apply(me, args);
   } else {
@@ -1520,16 +1520,13 @@ goog.base = function(me, opt_methodName, var_args) {
 
 
 /**
- * Allow for aliasing within scope functions.  This function exists for
- * uncompiled code - in compiled code the calls will be inlined and the
- * aliases applied.  In uncompiled code the function is simply run since the
- * aliases as written are valid JavaScript.
- * @param {function()} fn Function to call.  This function can contain aliases
- *     to namespaces (e.g. "var dom = goog.dom") or classes
- *    (e.g. "var Timer = goog.Timer").
+ * スコープ関数の中でエイリアス（別名）を使えるようにする。この関数はコンパイラ
+ * によってインラインに書き換えられる。コンパイルされていない場合はそのまま実行
+ * される。
+ * @param {function()} fn エイリアスが適用される。この関数は名前空間のエイリアス
+ *     を含むことができる。(e.g. "var dom = goog.dom") または
+ *     (e.g. "var Timer = goog.Timer").
  */
 goog.scope = function(fn) {
   fn.call(goog.global);
 };
-
-
