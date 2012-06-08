@@ -15,10 +15,9 @@
 /**
  * @fileoverview Closure Library のブートストラップ。
  *
- * In uncompiled mode base.js will write out Closure's deps file, unless the
- * global <code>CLOSURE_NO_DEPS</code> is set to true.  This allows projects to
- * include their own deps file(s) from different locations.
- *
+ * もし、 {@link goog.CLOSURE_NO_DEPS} が true のとき、コンパイルされていない
+ * base.js は依存関係ファイルを書き出す。これによって異なる環境下でそれぞれが依
+ * 存関係を解決するのことができるようになる。
  */
 
 
@@ -1259,7 +1258,6 @@ goog.cssNameMappingStyle_;
  * の場合、引数は <code>-</code> 繋がりの複数の文字列として扱われ、ぞれぞれマッ
  * プが該当する CSS クラス名に変換されて返される。 <code>BY_WHOLE</code> の場合
  * は、与えられた文字列そのものに該当する CSS クラス名が返される。
- * If a rewrite is not specified by the map, the compiler will output a warning.
  *
  * CSS クラス名マップがコンパイルされた場合、 {@link goog.getCssName} は以下のよ
  * うに書き換えられる。
@@ -1314,7 +1312,7 @@ goog.getCssName = function(className, opt_modifier) {
 
 
 /**
- * Sets the map to check when returning a value from goog.getCssName(). Example:
+ *{@link goog.getCssName} で返すための CSS クラス名マップを登録する。
  * <pre>
  * goog.setCssNameMapping({
  *   "goog": "a",
@@ -1325,16 +1323,16 @@ goog.getCssName = function(className, opt_modifier) {
  * // The following evaluates to: "a a-b".
  * goog.getCssName('goog') + ' ' + goog.getCssName(x, 'disabled')
  * </pre>
- * When declared as a map of string literals to string literals, the JSCompiler
- * will replace all calls to goog.getCssName() using the supplied map if the
- * --closure_pass flag is set.
+ * もし、文字列をキーとしてプロパティはすべての文字列であるオブジェクトリテラル
+ * が与えられ、さらにコンパイラに<code>--closure_pass</code> が指定されていた場
+ * 合、すべての {@link goog.getCssName} は文字列に置き換えられる。
  *
- * @param {!Object} mapping A map of strings to strings where keys are possible
- *     arguments to goog.getCssName() and values are the corresponding values
- *     that should be returned.
- * @param {string=} opt_style The style of css name mapping. There are two valid
- *     options: 'BY_PART', and 'BY_WHOLE'.
- * @see goog.getCssName for a description.
+ * @param {!Object} mapping {@link goog.getCssName} の引数で指定するための文字
+ *     列-文字列形式のマップ。プロパティは {@link goog.getCssName} で返される文
+ *     字列と一致するようにする。
+ * @param {string=} opt_style CSS マップの形式。 'BY_PART' 、 'BY_WHOLE' が指定
+ *     できる。
+ * @see goog.getCssName
  */
 goog.setCssNameMapping = function(mapping, opt_style) {
   goog.cssNameMapping_ = mapping;
@@ -1343,32 +1341,34 @@ goog.setCssNameMapping = function(mapping, opt_style) {
 
 
 /**
- * To use CSS renaming in compiled mode, one of the input files should have a
- * call to goog.setCssNameMapping() with an object literal that the JSCompiler
- * can extract and use to replace all calls to goog.getCssName(). In uncompiled
- * mode, JavaScript code should be loaded before this base.js file that declares
- * a global variable, CLOSURE_CSS_NAME_MAPPING, which is used below. This is
- * to ensure that the mapping is loaded before any calls to goog.getCssName()
- * are made in uncompiled mode.
+ * コンパイラが {@link goog.getCssName} と CSS クラス名の置き換えを有効にしてい
+ * た場合、スクリプトのうちどれかひとつは {@link goog.setCssNameMapping} によっ
+ * て変換用マップを定義していなければならない。もし、コンパイルしない状態で動作
+ * させるときは、 base.js ファイルが読み込まれる前にグローバルスコープで読み込む
+ * ようにしておくべきである。その場合、グローバルスコープでマップを
+ * <code>CLOSURE_CSS_NAME_MAPPING</code> の名前で宣言しておくことで読み込むこと
+ * ができる。
  *
- * A hook for overriding the CSS name mapping.
+ * CSS クラス名変換マップを書き換えするためのグローバルオブジェクト。
  * @type {Object|undefined}
  */
 goog.global.CLOSURE_CSS_NAME_MAPPING;
 
 
 if (!COMPILED && goog.global.CLOSURE_CSS_NAME_MAPPING) {
-  // This does not call goog.setCssNameMapping() because the JSCompiler
-  // requires that goog.setCssNameMapping() be called with an object literal.
+  // この場合は goog.setCssNameMapping() を使うべきでない。なぜならば、
+  // goog.setCssNameMapping () はオブジェクトリテラルを与えられることを意図され
+  // ているからだ。
   goog.cssNameMapping_ = goog.global.CLOSURE_CSS_NAME_MAPPING;
 }
 
 
 /**
- * Abstract implementation of goog.getMsg for use with localized messages.
- * @param {string} str Translatable string, places holders in the form {$foo}.
- * @param {Object=} opt_values Map of place holder name to value.
- * @return {string} message with placeholders filled.
+ * ローカライズされたメッセージを得る {@link goog.getMsg} の抽象的な実装。
+ * @param {string} str ローカライズしたい部分を '{$foo}' という形式で記述した文
+ *     字列。
+ * @param {Object=} opt_values ローカライズ文字列のマップ。
+ * @return {string} message ローカライズされた文字列。
  */
 goog.getMsg = function(str, opt_values) {
   var values = opt_values || {};
@@ -1381,28 +1381,26 @@ goog.getMsg = function(str, opt_values) {
 
 
 /**
- * Exposes an unobfuscated global namespace path for the given object.
- * Note that fields of the exported object *will* be obfuscated,
- * unless they are exported in turn via this function or
- * goog.exportProperty
+ * 与えられたオブジェクトをコンパイラによるリネームから保護する。
+ * ただし、オブジェクトのメンバはリネームから<b>保護されない</b>。
+ * この用途の場合は、 {@link goog.exportProperty} を使うべきである。
  *
- * <p>Also handy for making public items that are defined in anonymous
- * closures.
+ * パブリックなオブジェクトを無名関数のクロージャから作成する際に役に立つ。
  *
- * ex. goog.exportSymbol('public.path.Foo', Foo);
+ * <pre>goog.exportSymbol('public.path.Foo', Foo);</pre>
  *
- * ex. goog.exportSymbol('public.path.Foo.staticFunction',
- *                       Foo.staticFunction);
- *     public.path.Foo.staticFunction();
+ * <pre>goog.exportSymbol('public.path.Foo.staticFunction',
+ *                   Foo.staticFunction);
+ * public.path.Foo.staticFunction();</pre>
  *
- * ex. goog.exportSymbol('public.path.Foo.prototype.myMethod',
- *                       Foo.prototype.myMethod);
- *     new public.path.Foo().myMethod();
+ * <pre>goog.exportSymbol('public.path.Foo.prototype.myMethod',
+ *                   Foo.prototype.myMethod);
+ * new public.path.Foo().myMethod();</pre>
  *
- * @param {string} publicPath Unobfuscated name to export.
- * @param {*} object Object the name should point to.
- * @param {Object=} opt_objectToExportTo The object to add the path to; default
- *     is |goog.global|.
+ * @param {string} publicPath リネームから保護したいオブジェクトのパス。
+ * @param {*} object リネームから保護したいオブジェクト。
+ * @param {Object=} opt_objectToExportTo リネームから保護したいオブジェクトが登
+ *     録される名前空間。
  */
 goog.exportSymbol = function(publicPath, object, opt_objectToExportTo) {
   goog.exportPath_(publicPath, object, opt_objectToExportTo);
