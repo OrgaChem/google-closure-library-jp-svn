@@ -18,6 +18,7 @@
  * もし、 {@link goog.CLOSURE_NO_DEPS} が true のとき、コンパイルされていない
  * base.js は依存関係ファイルを書き出す。これによって異なる環境下でそれぞれが依
  * 存関係を解決するのことができるようになる。
+ * @provideGoog
  */
 
 
@@ -64,14 +65,14 @@ goog.DEBUG = true;
  * うに指定する。
  * 例：ja-JP、en、en-US、sr-Latin-BO、zh-Hans-CN
  *
- * 地域・言語情報の詳細は以下を参照。{@link 
+ * 地域・言語情報の詳細は以下を参照。{@link
  * http://www.unicode.org/reports/tr35/#Unicode_Language_and_Locale_Identifiers}
  *
  * 日本語情報：
  * {@link http://ja.wikipedia.org/wiki/ISO_639}
  * {@link http://ja.wikipedia.org/wiki/ISO_3166-1_alpha-2}
  *
- * 言語コードは ISO 639-1によって定義されている値を指定する。{@link 
+ * 言語コードは ISO 639-1によって定義されている値を指定する。{@link
  * http://www.w3.org/WAI/ER/IG/ert/iso639.htm} を参照。
  * 注記： ヘブライ言語については新コード(he)ではなく旧コード(iw)を使うほうがよ
  * い。{@link see http://wiki/Main/IIISynonyms} を参照（デッドリンク）。
@@ -81,8 +82,23 @@ goog.LOCALE = 'en';  // default to en
 
 
 /**
+ * @define {boolean} このスクリプトが動作するサイトは信頼できるサイトであれば、
+ *     true。
+ *
+ * 信頼されていないサイトとは、いくつかのネイティブ関数をPrototypeやDatejs、
+ * jQueryなどが上書きしているサイトのこと。このフラグをfalseにすれば、Closure
+ * Library は自身で実装した関数を用いる（可能であれば）。
+ *
+ * もし、あなたのスクリプトが第三者のサイトに読み込まれる場合や、非標準なネイ
+ * ティブ関数実装がある場合は、{@code --define goog.TRUSTED_SITE=false}を設定す
+ * るとよい。
+ */
+goog.TRUSTED_SITE = true;
+
+
+/**
  * オブジェクトスタブ（空の名前空間）を作成する。 goog.provide() はそのファイル
- * の提供する名前空間/オブジェクトを定義する。ビルドツールはこの provide/require 
+ * の提供する名前空間/オブジェクトを定義する。ビルドツールはこの provide/require
  * 文から依存関係を把握し、依存関係の記述ファイル dep.js を生成する。
  *
  * @see goog.require
@@ -160,11 +176,9 @@ if (!COMPILED) {
  * 書きしない。
  * 例：
  * "a.b.c" -> a = {};a.b={};a.b.c={};
- * {@link goog.provide} {@link goog.exportSymbol} で使う。 
+ * {@link goog.provide} {@link goog.exportSymbol} で使う。
  * @param {string} name 対象となっているオブジェクトの属する名前空間の名前パス。
  * @param {*=} opt_object 名前パスの末尾で定義されているオブジェクト。省略可能。
- * @param {Object=} opt_objectToExportTo The object to add the path to; default
- *     is |goog.global|.
  * @param {Object=} opt_objectToExportTo オブジェクトを追加する際のスコープ。省
  *     略時は {@link goog.global} 。
  * @private
@@ -291,7 +305,7 @@ goog.addDependency = function(relPath, provides, requires) {
 /**
  * @define {boolean} true ならデバッグローダーを有効にする。
  *
- * これが有効にされていて、名前空間が既に登録されていれば {@link goog.provide} 
+ * これが有効にされていて、名前空間が既に登録されていれば {@link goog.provide}
  * はスクリプトタグを DOM に追加することで名前空間を読み込む。
  *
  * もし無効にすると {@link goog.provide} は名前空間を既に読込済みの状態にする。
@@ -359,7 +373,7 @@ goog.global.CLOSURE_BASE_PATH;
 
 
 /**
- * true ならば Closure 用の依存関係用ファイルを読み込む。 falsely ならば 
+ * true ならば Closure 用の依存関係用ファイルを読み込む。 falsely ならば
  * {@link goog.basePath} 直下の deps.js が読み込まれる。
  * @type {boolean|undefined}
  */
@@ -376,7 +390,7 @@ goog.global.CLOSURE_NO_DEPS;
  * は、スクリプトが無事インポートできたら true を返し、それ以外の場合には false
  * を返すことが望ましい。
  *
- * @note orga.chem.job@gmail.com (OrgaChem)
+ * NOTE by orga.chem.job@gmail.com (OrgaChem):
  * この変数を書き換えてサーバーサイド JavaScript エンジンの node.js 上で Closure
  * Library が動作できるようにしているプロジェクトがあり、この関数のはたらきがよ
  * く理解できる。
@@ -417,10 +431,10 @@ goog.identityFunction = function(opt_returnValue, var_args) {
  * る。
  *
  * 抽象クラス Foo のメソッド bar() を定義することを考える。
- * 
+ *
  * <pre>Foo.prototype.bar = goog.abstractMethod;</pre>
  *
- * @note
+ * NOTE:
  * 引数なども含めてオーバーライドされることを考え、より抽象化するために関数名は
  * 設定されていない。
  *
@@ -438,7 +452,7 @@ goog.abstractMethod = function() {
  * 常に同じインスタンスを返す静的メソッド（クラスメソッド） {@code getInstance}
  * を定義する。
  *
- * @note orga.chem.job@gmail.com (OrgaChem)
+ * NOTE by orga.chem.job@gmail.com (OrgaChem):
  * この関数はシングルトンパターン（インスタンスが唯一であることが保証されるパタ
  * ーン）のクラス生成のときに用いられる。
  * 例えば、シングルトンクラス {@link foo.Singleton} のコードは以下のようになる。
@@ -572,6 +586,23 @@ if (!COMPILED && goog.ENABLE_DEBUG_LOADER) {
   goog.writeScriptTag_ = function(src) {
     if (goog.inHtmlDocument_()) {
       var doc = goog.global.document;
+
+      // If the user tries to require a new symbol after document load,
+      // something has gone terribly wrong. Doing a document.write would
+      // wipe out the page.
+      if (doc.readyState == 'complete') {
+        // Certain test frameworks load base.js multiple times, which tries
+        // to write deps.js each time. If that happens, just fail silently.
+        // These frameworks wipe the page between each load of base.js, so this
+        // is OK.
+        var isDeps = /\bdeps.js$/.test(src);
+        if (isDeps) {
+          return false;
+        } else {
+          throw Error('Cannot write "' + src + '" after document load');
+        }
+      }
+
       doc.write(
           '<script type="text/javascript" src="' + src + '"></' + 'script>');
       return true;
@@ -779,7 +810,8 @@ goog.typeOf = function(value) {
 
 /**
  * 与えられた値が undefined でなければ true を返す。
- * @warning この関数はオブジェクトのプロパティを確かめるために使ってはならない。
+ *
+ * WARNING: この関数はオブジェクトのプロパティを確かめるために使ってはならない。
  * この用途では in 演算子をつかうべき。また、この関数はグローバルで定義された
  * undefined 値が書き換えられていない状況を想定している。
  * @param {*} val テストしたい値。
@@ -946,8 +978,7 @@ goog.removeUid = function(obj) {
  * @type {string}
  * @private
  */
-goog.UID_PROPERTY_ = 'closure_uid_' +
-    Math.floor(Math.random() * 2147483648).toString(36);
+goog.UID_PROPERTY_ = 'closure_uid_' + ((Math.random() * 1e9) >>> 0);
 
 
 /**
@@ -980,11 +1011,11 @@ goog.removeHashCode = goog.removeUid;
  * 与えられた値を複製する。オブジェクト・配列・基本的な型が与えられた場合には、
  * 再帰的に複製される。
  *
- * @warning {@link goog.cloneObject} は循環参照を検知できない。オブジェクトが自
- *     身を参照する場合には無限に再帰処理がおこなわれてしまう。
+ * WARNING: {@link goog.cloneObject} は循環参照を検知できない。オブジェクトが自
+ * 身を参照する場合には無限に再帰処理がおこなわれてしまう。
  *
- * @warning {@link goog.cloneObject} はユニークな値が複製されることを防げない。
- *     {@link goog.getUid} によって作られたユニークな値も複製されてしまう。
+ * WARNING: {@link goog.cloneObject} はユニークな値が複製されることを防げない。
+ * {@link goog.getUid} によって作られたユニークな値も複製されてしまう。
  *
  * @param {*} obj 複製したいオブジェクト。
  * @return {*} 複製されたオブジェクト。
@@ -1006,19 +1037,6 @@ goog.cloneObject = function(obj) {
 
   return obj;
 };
-
-
-/**
- * 複製用のメソッドをあらかじめ定義しておく。これはコンパイラが
- * {@link goog.cloneObject} を利用したスクリプトのダックタイピングをサポートする
- * のに必要。
- *
- * TODO(brenneman): Remove once the JSCompiler can infer that the check for
- * proto.clone is safe in goog.cloneObject.
- *
- * @type {Function}
- */
-Object.prototype.clone;
 
 
 /**
@@ -1081,7 +1099,7 @@ goog.bindJs_ = function(fn, selfObj, var_args) {
  * <pre>var barMethBound = goog.bind(myFunction, myObj, 'arg1', 'arg2');
  * barMethBound('arg3', 'arg4');</pre>
  *
- * @note orga.chem.job@gmail.com (OrgaChem) 
+ * NOTE by orga.chem.job@gmail.com (OrgaChem):
  * 上の引数の振る舞いは、
  * <pre>barMethBound('arg3', 'arg4')</pre>
  * が下のようなコードと等価であるということである。
@@ -1119,7 +1137,7 @@ goog.bind = function(fn, selfObj, var_args) {
  * var g = goog.partial(f, arg1, arg2);
  * g(arg3, arg4);
  *
- * @note orga.chem.job@gmail.com (OrgaChem) 
+ * NOTE by orga.chem.job@gmail.com (OrgaChem):
  * 上の引数の振る舞いは、
  * <pre>g('arg3', 'arg4')</pre>
  * が下のようなコードと等価であるということである。
@@ -1163,7 +1181,7 @@ goog.mixin = function(target, source) {
 /**
  * @return {number} 1970 年 1 月から今までに経過した時間をミリ秒の単位で返す。
  */
-goog.now = Date.now || (function() {
+goog.now = (goog.TRUSTED_SITE && Date.now) || (function() {
   // Unary plus operator converts its operand to a number which in the case of
   // a date is done by calling getTime().
   return +new Date();
@@ -1249,7 +1267,7 @@ goog.cssNameMappingStyle_;
  *
  * この関数は {@link goog.setCssNameMapping} と連携して動作する。
  *
- * CSS クラス名が見つからない場合は与えられた文字列がそのまま返される。 
+ * CSS クラス名が見つからない場合は与えられた文字列がそのまま返される。
  * <code>opt_modifier</code> が指定されている場合は <code>-</code> 繋がりの文字
  * 列が返される。
  *
@@ -1365,6 +1383,16 @@ if (!COMPILED && goog.global.CLOSURE_CSS_NAME_MAPPING) {
 
 /**
  * ローカライズされたメッセージを得る {@link goog.getMsg} の抽象的な実装。
+ *
+ * この関数はコンパイラプリミティブである。コンパイラにローカライズされたメッセ
+ * ージファイルと一緒に渡すと、文字列はコンパイル時に置換されたのち結合される
+ * （圧縮後はただの文字列リテラルになるということ）。
+ *
+ * メッセージはこの形式で初期化すること：
+ * <code>
+ * var MSG_NAME = goog.getMsg('Hello {$placeholder}', {'placeholder': 'world'});
+ * </code>
+ *
  * @param {string} str ローカライズしたい部分を '{$foo}' という形式で記述した文
  *     字列。
  * @param {Object=} opt_values ローカライズ文字列のマップ。
@@ -1377,6 +1405,25 @@ goog.getMsg = function(str, opt_values) {
     str = str.replace(new RegExp('\\{\\$' + key + '\\}', 'gi'), value);
   }
   return str;
+};
+
+
+/**
+ * ローカライズされたメッセージを取得する。翻訳がなければだいたいメッセージを返
+ * す。
+ * この関数は、まだすべての言語で翻訳されていない新しいメッセージを追加する場合
+ * に便利である。
+ *
+ * この関数はコンパイラプリミティブである。この形式で使用すること：
+ * <code>var x = goog.getMsgWithFallback(MSG_A, MSG_B);</code>
+ * MSG_AとMSG_Bはgoog.getMsgによって初期化される。
+ *
+ * @param {string} a 優先されるメッセージ。
+ * @param {string} b 代替メッセージ。
+ * @return {string} 翻訳されたメッセージ。なければ代替メッセージ。
+ */
+goog.getMsgWithFallback = function(a, b) {
+  return a;
 };
 
 
